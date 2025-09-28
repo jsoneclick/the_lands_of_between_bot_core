@@ -27,7 +27,7 @@ function getGameState(userId) {
 bot.start((ctx) => {
   startGame(ctx.from.id);
   ctx.reply(
-    'Ласкаво просимо до RPG! Бийся з монстром!',
+    'Здарова Артем, Вдад написав бота з допомогою часа жпт, і хвастається тобі',
     Markup.inlineKeyboard([
       [Markup.button.callback('⚔️ Удар', 'hit')],
       [Markup.button.callback('💥 Сильний удар', 'strong_hit')],
