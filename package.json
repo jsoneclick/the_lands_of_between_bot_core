@@ -1,0 +1,15 @@
+{
+  "name": "the_lands_of_between_bot",
+  "version": "1.0.0",
+  "description": "Простий RPG бот для Telegram на Telegraf",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "telegraf": "^4.16.3"
+  }
+}
