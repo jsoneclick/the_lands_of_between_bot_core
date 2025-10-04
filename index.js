@@ -1,65 +1,54 @@
 import { Telegraf } from "telegraf";
 import fetch from "node-fetch";
 
-const bot = new Telegraf("YOUR_BOT_TOKEN");
+const bot = new Telegraf(process.env.BOT_TOKEN); // set in Railway
 
-// команда /start
-bot.start((ctx) => {
-  ctx.reply("Привіт 👋 Введи назву гри, і я знайду її у Steam.");
-});
+// Simple command /start
+bot.start((ctx) => ctx.reply("Send me a game name and I'll fetch info from SteamDB + HowLongToBeat!"));
 
-// будь-яке повідомлення юзера — трактуємо як назву гри
+// Listen for any text message
 bot.on("text", async (ctx) => {
-  const name = ctx.message.text.trim();
-  console.log("Отримав запит:", name);
-
-  if (!name) {
-    ctx.reply("⚠️ Введи назву гри!");
-    return;
+  const query = ctx.message.text.trim();
+  if (!query) {
+    return ctx.reply("Please send a game name!");
   }
 
-  try {
-    // 1) Пошук у Steam Store
-    const searchResp = await fetch(
-      `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(
-        name
-      )}&cc=us&l=en`
-    );
-    const searchData = await searchResp.json();
-    console.log("Результат пошуку:", searchData);
+  ctx.reply(`🔎 Searching for "${query}" ...`);
 
-    if (!searchData.items || searchData.items.length === 0) {
-      ctx.reply("❌ Гру не знайдено.");
-      return;
+  try {
+    // Example: Search Steam Store API
+    const steamRes = await fetch(
+      `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(query)}&l=english&cc=us`
+    );
+    const steamData = await steamRes.json();
+
+    let replyMessage = `🎮 Results for "${query}":\n`;
+
+    if (steamData.items && steamData.items.length > 0) {
+      const firstGame = steamData.items[0];
+      replyMessage += `\n🕹️ Steam: ${firstGame.name}\n`;
+      replyMessage += `💲 Price: ${firstGame.price ? firstGame.price.final / 100 : "Free"} USD\n`;
+      replyMessage += `🔗 Link: https://store.steampowered.com/app/${firstGame.id}\n`;
+
+      if (firstGame.tiny_image) {
+        await ctx.replyWithPhoto(firstGame.tiny_image);
+      }
+    } else {
+      replyMessage += "\n⚠️ No results on Steam.";
     }
 
-    const match = searchData.items[0];
-    console.log("Збіг:", match);
-
-    // 2) Деталі гри
-    const detailsResp = await fetch(
-      `https://store.steampowered.com/api/appdetails?appids=${match.id}&l=uk`
-    );
-    const detailsData = await detailsResp.json();
-    const gameInfo = detailsData[match.id].data;
-    console.log("Дані гри:", gameInfo);
-
-    // 3) Формуємо відповідь
-    let text = `🎮 *${gameInfo.name}*\n\n`;
-    text += `*Жанри:* ${gameInfo.genres
-      ?.map((g) => g.description)
-      .join(", ")}\n\n`;
-    text += `*Опис:* ${gameInfo.short_description}`;
-
-    // надсилаємо картинку + текст
-    await ctx.replyWithPhoto(
-      { url: gameInfo.header_image },
-      { caption: text, parse_mode: "Markdown" }
+    // Example: HowLongToBeat (unofficial API wrapper)
+    const hltbRes = await fetch(
+      `https://howlongtobeat.com/api/search` // ⚠️ requires wrapper / proxy, not public API
     );
 
+    // For now, just placeholder (since HLTB API needs scraping or a wrapper)
+    replyMessage += `\n⏱️ HowLongToBeat: (integration required with unofficial API)`;
+
+    ctx.reply(replyMessage);
   } catch (err) {
-    console.error("Помилка:", err);
-    ctx.reply("⚠️ Сталася помилка при пошуку.");
+    console.error(err);
+    ctx.reply("❌ Error while fetching game info.");
   }
 });
 
