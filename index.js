@@ -2,17 +2,18 @@ import { Telegraf } from "telegraf";
 import fetch from "node-fetch";
 
 const bot = new Telegraf(process.env.BOT_TOKEN); // set in Railway
- const userId = ctx.from.id; // 👈 user ID
-
-  console.log("User ID:", userId);
 
 // Simple command /start
-bot.start((ctx) => ctx.reply("Send me a game name and I'll fetch info from SteamDB + HowLongToBeat!"));
+bot.start((ctx) => {
+  const userId = ctx.from.id; // ✅ user ID available here
+  console.log("User ID:", userId);
+  ctx.reply(`👋 Welcome! Your ID is ${userId}\n\nSend me a game name and I'll fetch info from SteamDB + HowLongToBeat!`);
+});
 
 // Listen for any text message
 bot.on("text", async (ctx) => {
   const query = ctx.message.text.trim();
-  const userId = ctx.from.id; // 👈 user ID
+  const userId = ctx.from.id; // ✅ user ID here too
 
   console.log("User ID:", userId);
 
